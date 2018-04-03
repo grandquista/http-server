@@ -2,45 +2,107 @@ import json
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+from cowpy import main
 
 ADDRESS = ('127.0.0.1', 3000)
 
+INDEX = b'''
+<!DOCTYPE html>
+<html>
+<head>
+    <title> cowsay </title>
+</head>
+<body>
+    <header>
+        <nav>
+        <ul>
+            <li><a href="/cowsay">cowsay</a></li>
+        </ul>
+        </nav>
+    <header>
+    <main>
+        <!-- project description -->
+    </main>
+</body>
+</html>
+'''
+
+COWSAY = b'''
+<!DOCTYPE html>
+<html>
+<head>
+    <title> cowsay </title>
+</head>
+<body>
+    <header>
+        <nav>
+        <ul>
+            <li><a href="/cow?msg=text">cow?msg=text</a></li>
+        </ul>
+        </nav>
+    <header>
+    <main>
+        /cow?msg=text
+    </main>
+</body>
+</html>
+'''
+
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        parsed_path = urlparse(self.path)
-        parsed_qs = parse_qs(parsed_path.query)
-
-        if parsed_path.path == '/':
-            self.send_response(200)
-            self.end_headers()
-
-            self.wfile.write(b'You did a thing!')
-            return
-
-        elif parsed_path.path == '/test':
-            try:
-                cat = json.loads(parsed_qs['category'][0])
-            except KeyError:
-                self.send_response(400)
-                self.end_headers()
-                self.wfile.write(b'You did a bad thing')
-                return
-
-            self.send_response(200)
-            self.end_headers()
-            self.wfile.write(b'we did the thing with the qs')
-            return
-
-        else:
-            self.send_response(404)
-            self.end_headers()
-            self.wfile.write(b'Not Found')
-
-    def do_POST(self):
+    def get_index(self, parsed_path):
         self.send_response(200)
         self.end_headers()
-        self.send_response_only()
+        self.wfile.write(INDEX)
+
+    def get_cowsay(self, parsed_path):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(COWSAY)
+
+    def get_cow(self, parsed_path):
+        parsed_qs = parse_qs(parsed_path.query)
+        try:
+            cat = json.loads(parsed_qs['category'][0])
+        except KeyError:
+            self.send_response(400)
+            self.end_headers()
+            self.wfile.write(b'You did a bad thing')
+            return
+
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b'we did the thing with the qs')
+
+    def post_cow(self, parsed_path):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(COWSAY)
+
+    def do_GET(self):
+        parsed_path = urlparse(self.path)
+
+        if parsed_path.path == '/':
+            return self.get_index(parsed_path)
+
+        if parsed_path.path == '/cowsay':
+            return self.get_cowsay(parsed_path)
+
+        if parsed_path.path == '/cow':
+            return self.get_cow(parsed_path)
+
+        self.send_response(404)
+        self.end_headers()
+        self.wfile.write(b'Not Found')
+
+    def do_POST(self):
+        parsed_path = urlparse(self.path)
+        if parsed_path.path == '/cow':
+            return self.post_cow(parsed_path)
+
+        self.send_response(404)
+        self.end_headers()
+        self.wfile.write(b'Not Found')
 
 
 def create_server():
