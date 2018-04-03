@@ -1,8 +1,7 @@
-import json
-
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from json import dumps, loads
 from urllib.parse import urlparse, parse_qs
-from cowpy import main
+from cowpy import cow
 
 ADDRESS = ('127.0.0.1', 3000)
 
@@ -50,36 +49,48 @@ COWSAY = b'''
 
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+    COW = cow.Moose()
+
     def get_index(self, parsed_path):
+        """
+        Handle `/` path get request.
+        """
         self.send_response(200)
         self.end_headers()
         self.wfile.write(INDEX)
 
     def get_cowsay(self, parsed_path):
+        """
+        Handle `/cowsay` path get request.
+        """
         self.send_response(200)
         self.end_headers()
         self.wfile.write(COWSAY)
 
     def get_cow(self, parsed_path):
+        """
+        Handle `/cow[?msg=<message>]` path get request.
+        """
         parsed_qs = parse_qs(parsed_path.query)
-        try:
-            cat = json.loads(parsed_qs['category'][0])
-        except KeyError:
-            self.send_response(400)
-            self.end_headers()
-            self.wfile.write(b'You did a bad thing')
-            return
-
+        msg = parsed_qs.get('msg', 'You should speak up for yourself.')
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b'we did the thing with the qs')
+        self.wfile.write(self.COW.milk(msg).encode())
 
     def post_cow(self, parsed_path):
+        """
+        Handle `/cow[?msg=<message>]` path post request.
+        """
+        parsed_qs = parse_qs(parsed_path.query)
+        msg = parsed_qs.get('msg', 'You should speak up for yourself.')
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(COWSAY)
+        self.wfile.write(dumps({"content": self.COW.milk(msg)}).encode())
 
     def do_GET(self):
+        """
+        Dispatch get to known paths or handle 404 status.
+        """
         parsed_path = urlparse(self.path)
 
         if parsed_path.path == '/':
@@ -96,6 +107,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(b'Not Found')
 
     def do_POST(self):
+        """
+        Dispatch post to known paths or handle 404 status.
+        """
         parsed_path = urlparse(self.path)
         if parsed_path.path == '/cow':
             return self.post_cow(parsed_path)
@@ -106,10 +120,16 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
 def create_server():
+    """
+    Initialize a default server for cowsay.
+    """
     return HTTPServer(ADDRESS, SimpleHTTPRequestHandler)
 
 
 def main():
+    """
+    Entry point for server application.
+    """
     with create_server() as server:
         print(f'Starting server on port { ADDRESS[1] }')
         server.serve_forever()
