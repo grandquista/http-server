@@ -5,8 +5,7 @@ from cowpy import cow
 
 ADDRESS = ('127.0.0.1', 3000)
 
-INDEX = b'''
-<!DOCTYPE html>
+INDEX = b'''<!DOCTYPE html>
 <html>
 <head>
     <title> cowsay </title>
@@ -26,8 +25,7 @@ INDEX = b'''
 </html>
 '''
 
-COWSAY = b'''
-<!DOCTYPE html>
+COWSAY = b'''<!DOCTYPE html>
 <html>
 <head>
     <title> cowsay </title>
@@ -50,6 +48,7 @@ COWSAY = b'''
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     COW = cow.Moose()
+    DEFAULT_MSG = ['You should speak up for yourself.']
 
     def get_index(self, parsed_path):
         """
@@ -72,7 +71,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         Handle `/cow[?msg=<message>]` path get request.
         """
         parsed_qs = parse_qs(parsed_path.query)
-        msg = parsed_qs.get('msg', 'You should speak up for yourself.')
+        msg = parsed_qs.get('msg', self.DEFAULT_MSG)[0]
         self.send_response(200)
         self.end_headers()
         self.wfile.write(self.COW.milk(msg).encode())
@@ -82,7 +81,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         Handle `/cow[?msg=<message>]` path post request.
         """
         parsed_qs = parse_qs(parsed_path.query)
-        msg = parsed_qs.get('msg', 'You should speak up for yourself.')
+        msg = parsed_qs.get('msg', self.DEFAULT_MSG)[0]
         self.send_response(200)
         self.end_headers()
         self.wfile.write(dumps({"content": self.COW.milk(msg)}).encode())
