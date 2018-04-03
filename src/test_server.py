@@ -41,3 +41,12 @@ def test_server_sends_cow_qs_back():
         'http://127.0.0.1:3000/cow', params={'msg': msg})
     assert response.status_code == 200
     assert msg in response.text
+
+
+def test_server_sends_cow_post_qs_back():
+    """
+    """
+    msg = 'Hello world'
+    response = requests.post('http://127.0.0.1:3000/cow', {'msg': msg})
+    assert response.status_code == 200
+    assert msg in response.json()['content']
