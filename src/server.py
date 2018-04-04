@@ -1,5 +1,5 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from json import dumps, loads
+from json import dumps
 from urllib.parse import urlparse, parse_qs
 from cowpy import cow
 
@@ -19,7 +19,8 @@ INDEX = b'''<!DOCTYPE html>
         </nav>
     <header>
     <main>
-        <!-- project description -->
+This website provides an api linked above. It can be used to generate cowsay
+messages in raw test or JSON.
     </main>
 </body>
 </html>
@@ -28,18 +29,43 @@ INDEX = b'''<!DOCTYPE html>
 COWSAY = b'''<!DOCTYPE html>
 <html>
 <head>
-    <title> cowsay </title>
+    <title> cowsay api docs </title>
 </head>
 <body>
     <header>
         <nav>
         <ul>
-            <li><a href="/cow?msg=text">cow?msg=text</a></li>
+            <li><a href="..">home</a></li>
         </ul>
         </nav>
     <header>
     <main>
-        /cow?msg=text
+        <div>
+One endpoint is provided at the following path: /cow[?msg=message]. If the
+message is not provided a default one will be inserted. A POST at the endpoint
+will respond with a json document of the following form:
+            <code>{"content": string response from GET}</code>
+        </div>
+        <div>
+examples bolow:
+        </div>
+        <ul>
+            <li>
+                <a href="/cow?msg=text">/cow?msg=text
+                <iframe src="/cow?msg=text"></iframe>
+                </a>
+            </li>
+            <li>
+                <a href="/cow?msg=Hello user!">/cow?msg=Hello user!
+                <iframe src="/cow?msg=Hello user!"></iframe>
+                </a>
+            </li>
+            <li>
+                <a href="/cow">cow
+                <iframe src="/cow"></iframe>
+                </a>
+            </li>
+        </ul>
     </main>
 </body>
 </html>
@@ -47,7 +73,7 @@ COWSAY = b'''<!DOCTYPE html>
 
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
-    COW = cow.Moose()
+    COW = cow.get_cow()()
     DEFAULT_MSG = ['You should speak up for yourself.']
 
     def get_index(self, parsed_path):
