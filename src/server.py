@@ -1,5 +1,5 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from json import dumps
+from json import dumps, loads
 from urllib.parse import urlparse, parse_qs
 from cowpy import cow
 
@@ -106,8 +106,10 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         """
         Handle `/cow[?msg=<message>]` path post request.
         """
-        parsed_qs = parse_qs(parsed_path.query)
-        msg = parsed_qs.get('msg', self.DEFAULT_MSG)[0]
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        msg = loads(post_data)
+        msg = msg.get('msg', self.DEFAULT_MSG[0])
         self.send_response(200)
         self.end_headers()
         self.wfile.write(dumps({"content": self.COW.milk(msg)}).encode())
